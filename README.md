@@ -25,7 +25,7 @@ Install
 Usage
 -----
 
-Calling PINF *Programs* (see: [01-SimpleCommandLinePiping]()):
+Calling PINF *Programs* (see: [01-SimpleCommandLinePiping](https://github.com/pinf/pinf/tree/master/test/01-SimpleCommandLinePiping)):
 
 	$ pinf say 'Fred:' > fred.txt && cat fred.txt | pinf color 36 | pinf append ' hello'
 	> Fred: hello
