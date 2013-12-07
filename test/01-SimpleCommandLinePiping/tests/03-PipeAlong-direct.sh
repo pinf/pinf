@@ -1,1 +1,1 @@
-node ../programs/say 'Fred:' > fred.txt && cat fred.txt | node ../programs/color 36 | node ../programs/append ' hello'
+node ../programs/say 'Fred:' > fred.txt && node ../programs/color 36 < fred.txt | node ../programs/append ' hello'

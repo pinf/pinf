@@ -1,0 +1,8 @@
+{
+	"name": "pinf-adapters-provider-github",
+	"version": "0.0.0",
+	"private": true,
+	"dependencies": {
+		"request": "~2.29.0"
+	}
+}

@@ -1,4 +1,5 @@
 
+const PATH = require("path");
 const FS = require("fs");
 const VM = require("vm");
 const UTIL = require("util");
@@ -83,6 +84,9 @@ exports.boot = function(program, done) {
         	// NodeJS globals.
         	// @see http://nodejs.org/docs/latest/api/globals.html
         	global: global,
+        	require: require,
+        	__dirname: PATH.dirname(uri),
+        	__filename: uri,
         	process: new Process({
         		stdin: program.stdin,
         		stdout: program.stdout,

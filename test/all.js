@@ -55,13 +55,17 @@ HELPERS.for(module).runMainAndExit(function(callback) {
 
 			var log = [];
 
+	        var env = {};
+	        for (var name in process.env) {
+	            env[name] = process.env[name];
+	        }			
+			env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
+			env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
+			env.PINF_HOME = PATH.join(__dirname, majorTest, ".tmp", minorTest, ".pinf");
+
 			var proc = SPAWN(command.shift(), [ command.join(" ") ], {
 				cwd: PATH.join(__dirname, majorTest, "tests"),
-				env: {
-					PATH: PATH.join(__dirname, "../bin") + ":" + process.env.PATH,
-					PINF_PROGRAMS: PATH.join(__dirname, majorTest, "programs"),
-					HOME: PATH.join(__dirname, majorTest, ".tmp", minorTest)
-				}
+				env: env
 			});
 			proc.stdout.on('data', function (data) {
 				if (process.env.DEBUG) {

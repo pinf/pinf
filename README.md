@@ -17,23 +17,45 @@ PINF is a set of specific tools and conventions combined to create a platform th
 PINF enables collaboratively built systems of arbitrary complexity.
 
 
-Install
--------
+Setup
+-----
 
-	sudo npm install -g pinf --tag pre
+Requirements:
+
+  * OSX `>= 10.8`
+  * NodeJS `>= 0.10`
+  * git `>= 1.8`
+
+Install:
+
+    sudo npm install -g pinf --tag pre
 
 Test:
 
-	npm test
+    npm install
+    npm test
 
 
 Usage
 -----
 
-Calling PINF *Programs* (see: [01-SimpleCommandLinePiping](https://github.com/pinf/pinf/tree/master/test/01-SimpleCommandLinePiping)):
+Calling local PINF *Programs* (see: [01-SimpleCommandLinePiping](https://github.com/pinf/pinf/tree/master/test/01-SimpleCommandLinePiping)):
 
-	$ pinf say 'Fred:' > fred.txt && cat fred.txt | pinf color 36 | pinf append ' hello'
-	> Fred: hello
+    # Output Redirection
+    $ pinf say 'Fred:' > fred.txt && pinf color 36 < fred.txt | pinf append ' hello'
+    > Fred: hello
+
+    # Streaming
+    $ pinf send 3 Hello | pinf color 36 | pinf collect
+    > collected: Hello
+    > collected: Hello
+    > collected: Hello
+
+Calling remote PINF *Programs* (see: [02-SimpleProvisionFromGithub](https://github.com/pinf/pinf/tree/master/test/02-SimpleProvisionFromGithub)):
+
+    # Latest from master and cache
+    $ pinf github.com/pinf/pinf/master?test/01-SimpleCommandLinePiping/programs/say Hello
+    > Hello
 
 
 TODO

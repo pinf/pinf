@@ -1,0 +1,1 @@
+pinf github.com/pinf/pinf/master?test/01-SimpleCommandLinePiping/programs/say Hello

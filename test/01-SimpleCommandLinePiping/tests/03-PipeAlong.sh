@@ -1,1 +1,1 @@
-pinf say 'Fred:' > fred.txt && cat fred.txt | pinf color 36 | pinf append ' hello'
+pinf say 'Fred:' > fred.txt && pinf color 36 < fred.txt | pinf append ' hello'
