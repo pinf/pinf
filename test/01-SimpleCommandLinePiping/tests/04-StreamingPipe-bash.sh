@@ -1,0 +1,1 @@
+pinf.sh send 3 Hello | pinf.sh color 36 | pinf.sh collect

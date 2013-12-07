@@ -1,0 +1,1 @@
+node ../programs/say 'Hello' | node ../programs/color 36

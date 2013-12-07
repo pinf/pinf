@@ -1,0 +1,1 @@
+node ../../../bin/pinf send 3 Hello | node ../../../bin/pinf color 36 | node ../../../bin/pinf collect

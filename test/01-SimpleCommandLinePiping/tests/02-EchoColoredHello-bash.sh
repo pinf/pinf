@@ -1,0 +1,1 @@
+echo 'Hello' | pinf.sh color 36

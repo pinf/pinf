@@ -1,0 +1,1 @@
+pinf send 3 Hello | pinf color 36 | pinf collect

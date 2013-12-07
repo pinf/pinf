@@ -1,0 +1,1 @@
+node ../programs/say 'Fred:' > fred.txt && cat fred.txt | node ../programs/color 36 | node ../programs/append ' hello'

@@ -1,0 +1,1 @@
+echo 'Hello' | node ../programs/color 36

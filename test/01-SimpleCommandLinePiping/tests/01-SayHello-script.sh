@@ -1,0 +1,1 @@
+node ../../../bin/pinf say 'Hello'
