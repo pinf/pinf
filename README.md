@@ -6,6 +6,7 @@ pinf
   * Code License: [UNLICENSE](http://unlicense.org/)
   * Docs License: [Creative Commons Attribution-NonCommercial-ShareAlike 3.0](http://creativecommons.org/licenses/by-nc-sa/3.0/)
   * Mailing list: [groups.google.com/group/pinf](http://groups.google.com/group/pinf)
+  * Test Coverage: Striving for 100%
 
 The `pinf` command implementation used for hoisting PINF-based programs. [NodeJS](http://nodejs.org/) is used as the runtime engine for `pinf`.
 
@@ -20,6 +21,10 @@ Install
 -------
 
 	sudo npm install -g pinf --tag pre
+
+Test:
+
+	npm test
 
 
 Usage
