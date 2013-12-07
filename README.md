@@ -51,9 +51,9 @@ Calling local PINF *Programs* (see: [01-SimpleCommandLinePiping](https://github.
     > collected: Hello
     > collected: Hello
 
-Calling remote PINF *Programs* (see: [02-SimpleProvisionFromGithub](https://github.com/pinf/pinf/tree/master/test/02-SimpleProvisionFromGithub)):
+Calling cloned PINF *Programs* (see: [02-SimpleProvisionFromGithub](https://github.com/pinf/pinf/tree/master/test/02-SimpleProvisionFromGithub)):
 
-    # Latest from master and cache
+    # Clone latest from master once and cache
     $ pinf github.com/pinf/pinf/master?test/01-SimpleCommandLinePiping/programs/say Hello
     > Hello
 
