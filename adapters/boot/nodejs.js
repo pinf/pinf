@@ -7,7 +7,7 @@ const UTIL = require("util");
 
 exports.boot = function(program, done) {
 
-	var scriptPath = program.getAbsolutePath("bootScript");
+	var scriptPath = program.getAbsolutePathFromProperty("bootScript");
 
 	function Process(overrides) {
 		var self = this;

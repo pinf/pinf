@@ -3,14 +3,15 @@ const ASSERT = require("assert");
 const PATH = require("path");
 const FS = require("fs");
 const WAITFOR = require("waitfor");
-const HELPERS = require("../lib/helpers");
+const HELPERS = require("../lib/helpers").for(module);
 const SPAWN = require("child_process").spawn;
+const UUID = require("node-uuid");
 
 
 const WRITE = false;
 
 
-HELPERS.for(module).runMainAndExit(function(callback) {
+HELPERS.runMainAndExit(function(callback) {
 
 	function getMajorTests(callback) {
 		return FS.readdir(__dirname, function(err, filenames) {
@@ -36,13 +37,26 @@ HELPERS.for(module).runMainAndExit(function(callback) {
 
 		console.log(("[" + majorTest + "][" + minorTest + "] START").white);
 
+        var env = {};
+        for (var name in process.env) {
+            env[name] = process.env[name];
+        }
+		env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
+		env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
+		env.PINF_HOME = PATH.join(__dirname, ".tmp");
+		env.PINF_EPOCH = "default:tmp-" + UUID.v4();
+
 		function callback(err) {
 			if (err) {
 				console.log(("[" + majorTest + "][" + minorTest + "] ERROR").red);
+				return done(err);
 			} else {
-				console.log(("[" + majorTest + "][" + minorTest + "] END").white);
+				console.log(("[" + majorTest + "][" + minorTest + "] END").white);				
+				return HELPERS.exec('rm -Rf ' + PATH.join(env.PINF_HOME, env.PINF_EPOCH.split(":").pop()), function(err) {
+					if (err) return done(err);
+					return done.apply(null, arguments);
+				});
 			}
-			return done.apply(null, arguments);
 		}
 
 		if (/\.sh$/.test(minorTest)) {
@@ -54,14 +68,6 @@ HELPERS.for(module).runMainAndExit(function(callback) {
 			command = command.split(" ");
 
 			var log = [];
-
-	        var env = {};
-	        for (var name in process.env) {
-	            env[name] = process.env[name];
-	        }			
-			env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
-			env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
-			env.PINF_HOME = PATH.join(__dirname, majorTest, ".tmp", minorTest, ".pinf");
 
 			var proc = SPAWN(command.shift(), [ command.join(" ") ], {
 				cwd: PATH.join(__dirname, majorTest, "tests"),
@@ -108,10 +114,34 @@ HELPERS.for(module).runMainAndExit(function(callback) {
 				console.log(("[" + majorTest + "] END").bold);
 				return callback(null);
 			});
-			tests.forEach(function(minorTest) {
-				waitfor(majorTest, minorTest, runMinorTest);
+
+	        var env = {};
+	        for (var name in process.env) {
+	            env[name] = process.env[name];
+	        }
+			env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
+			env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
+			env.PINF_HOME = PATH.join(__dirname, ".tmp");
+			env.PINF_EPOCH = "default";
+
+			return HELPERS.exec('sh ' + PATH.join(__dirname, majorTest, "tests", "start.sh"), {
+				cwd: PATH.join(__dirname, majorTest, "tests"),
+				env: env
+			}, function(err, output) {
+				if (err) {
+					process.stdout.write(output.stdout);
+					process.stdout.write(output.stderr);
+					return callback(err);
+				}
+				if (process.env.DEBUG) {
+					process.stdout.write(output.stdout);
+					process.stdout.write(output.stderr);
+				}
+				tests.forEach(function(minorTest) {
+					waitfor(majorTest, minorTest, runMinorTest);
+				});
+				return waitfor();
 			});
-			return waitfor();
 		});
 	}
 
