@@ -8,7 +8,8 @@ const SPAWN = require("child_process").spawn;
 const UUID = require("node-uuid");
 
 
-const WRITE = false;
+const WRITE = true;
+const SKIP_START = true;
 
 
 HELPERS.runMainAndExit(function(callback) {
@@ -94,7 +95,7 @@ HELPERS.runMainAndExit(function(callback) {
 				} else {
 					return FS.readFile(PATH.join(__dirname, majorTest, "results",  minorTest + ".log"), function(err, data) {
 						if (err) return callback(err);
-						ASSERT.equal(data.toString(), log.join("\n"));
+						ASSERT.equal(data.toString(), log.join(""));
 						return callback(null);
 					});
 				}
@@ -114,29 +115,50 @@ HELPERS.runMainAndExit(function(callback) {
 				console.log(("[" + majorTest + "] END").bold);
 				return callback(null);
 			});
+			function runStart(callback) {
+				return FS.exists(PATH.join(__dirname, ".tmp", "default"), function(exists) {
+					if (SKIP_START && exists) {
+						return callback(null);
+					}
+			        var env = {};
+			        for (var name in process.env) {
+			            env[name] = process.env[name];
+			        }
+					env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
+					env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
+					env.PINF_HOME = PATH.join(__dirname, ".tmp");
+					env.PINF_EPOCH = "default";
+					var command = 'sh ' + PATH.join(__dirname, majorTest, "tests", "start.sh");
+					command = command.split(" ");
+					var log = [];
+					var proc = SPAWN(command.shift(), [ command.join(" ") ], {
+						cwd: PATH.join(__dirname, majorTest, "tests"),
+						env: env
+					});
+					proc.stdout.on('data', function (data) {
+						if (SKIP_START || process.env.DEBUG) {
+							process.stdout.write(data);
+						}
+						log.push(data.toString());
+					});
+					proc.stderr.on('data', function (data) {
+						if (SKIP_START || process.env.DEBUG) {
+							process.stderr.write(data);
+						}
+						log.push(data.toString());
+					});
+					proc.on('close', function (code) {
+						if (code !== 0) {
+							console.error("OUTPUT", log.join(""));
+							return callback(new Error("Command '" + command + "' exited with code: " + code));
+						}
+						return callback(null);
+					});
+				});
 
-	        var env = {};
-	        for (var name in process.env) {
-	            env[name] = process.env[name];
-	        }
-			env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
-			env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
-			env.PINF_HOME = PATH.join(__dirname, ".tmp");
-			env.PINF_EPOCH = "default";
-
-			return HELPERS.exec('sh ' + PATH.join(__dirname, majorTest, "tests", "start.sh"), {
-				cwd: PATH.join(__dirname, majorTest, "tests"),
-				env: env
-			}, function(err, output) {
-				if (err) {
-					process.stdout.write(output.stdout);
-					process.stdout.write(output.stderr);
-					return callback(err);
-				}
-				if (process.env.DEBUG) {
-					process.stdout.write(output.stdout);
-					process.stdout.write(output.stderr);
-				}
+			}
+			return runStart(function(err) {
+				if (err) return callback(err);
 				tests.forEach(function(minorTest) {
 					waitfor(majorTest, minorTest, runMinorTest);
 				});

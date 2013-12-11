@@ -7,6 +7,7 @@ const EXEC = require("child_process").exec;
 exports.authorize = function(context, callback) {
 
 	var privateKeyPath = PATH.join(context.getAbsolutePathFromProperty("pinfHome", context.authEpoch), "id_rsa");
+	var publicKeyPath = privateKeyPath + ".pub";
 
 	return context.adapterMethods.authorize.getSuperSecretPassword(function(err, superSecretPassword) {
 		if (err) return callback(err);
@@ -25,7 +26,28 @@ exports.authorize = function(context, callback) {
 			return callback(null, env);
 		}
 
-		var publicKeyPath = privateKeyPath + ".pub";
+		context.adapterMethods.authorize.getGitSshEnvVars = function(callback) {
+			var env = {
+				GIT_SSH: PATH.join(__dirname, "git-ssh.sh")
+			};
+			return callback(null, env);
+		}
+
+		context.adapterMethods.authorize.getPublicKey = function(callback) {
+			return FS.readFile(publicKeyPath, function(err, data) {
+				if (err) return callback(err);
+				return callback(null, data.toString("ascii").replace(/\s\S+\n$/, ""));
+			});
+		}
+
+		context.adapterMethods.authorize.isPublicKeyAdded = function(alias, callback) {			
+			var path = publicKeyPath + "+added-to-" + alias;
+			return FS.exists(path, function(exists) {
+				return callback(null, (exists)? path : false, function(data, callback) {
+					return FS.outputFile(path, data, callback);
+				});
+			});
+		}
 
 		function call(bin, args, options, callback) {
 			options = options || {};

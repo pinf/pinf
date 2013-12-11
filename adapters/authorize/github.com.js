@@ -9,57 +9,80 @@ const REQUEST = require("request");
 
 exports.authorize = function(context, callback) {
 
-	function makeRequest(credentials, uri, options, callback) {
-		if (/\?/.test(uri)) {
-			if (!/&$/.test(uri)) uri += "&";
-		} else {
-			uri += "?";
-		}
-		var url = "https://api.github.com" + uri + "per_page=100&access_token=" + credentials.token;
-		function fetchPage(url, callback) {
-			var data = [];
-			return REQUEST({
-				url: url,
-				headers: {
-					"User-Agent": "nodejs/request"
-				},
-				json: true
-			}, function (err, res, body) {
-				if (err) return callback(err);
-				var links = {};
-				if (res.headers.link) {
-					res.headers.link.split(",").map(function(link) {
-						var m = link.match(/^<([^>]*)>; rel="([^"]*)"$/);
-						if (m) {
-							links[m[2]] = m[1];
-						}
-					});
+	function makeRequest(uri, args, callback) {
+		return context.adapterProperties.authorize.github.getCredentials(function(err, credentials) {
+			if (err) return callback(err);
+
+			var postBody = null;
+			var method = "GET";
+			if (/^POST:/.test(uri)) {
+				method = "POST";
+				uri = uri.substring(5);
+				postBody = {};
+				for (var name in args) {
+					postBody[name] = args[name];
 				}
-				if (body) {
-					if (res.statusCode !== 200) {
-						console.error("RESPONSE", body);
-						var err = new Error("Url '" + url + "' returned with status: " + res.statusCode);
-						err.code = res.statusCode;
-						return callback(err);
+				delete postBody.pages;
+				postBody = JSON.stringify(postBody);
+			}
+
+			if (/\?/.test(uri)) {
+				if (!/&$/.test(uri)) uri += "&";
+			} else {
+				uri += "?";
+			}
+			var url = "https://api.github.com" + uri + "per_page=100&access_token=" + credentials.token;
+			function fetchPage(url, callback) {
+				var data = [];
+				return REQUEST({
+					method: method,
+					url: url,
+					headers: {
+						"User-Agent": "nodejs/request"
+					},
+					json: true,
+					body: postBody
+				}, function (err, res, body) {
+					if (err) return callback(err);
+					var links = {};
+					if (res.headers.link) {
+						res.headers.link.split(",").map(function(link) {
+							var m = link.match(/^<([^>]*)>; rel="([^"]*)"$/);
+							if (m) {
+								links[m[2]] = m[1];
+							}
+						});
 					}
-					data.push(body);
-				} else {
-					console.error(body);
-				}
-				if (data.length === options.pages) {
-					return callback(null, data[0]);
-				}
-				if (links.next) {
-					return fetchPage(links.next, function(err, _data) {
-						if (err) return callback(err);
-						data = data.concat(_data);
-						return callback(null, data);
-					});
-				}
-				return callback(null, data);
-			});
-		}
-		return fetchPage(url, callback);
+					if (body) {
+						if (
+							(method === "GET" && res.statusCode !== 200) ||
+							(method === "POST" && res.statusCode !== 201)
+						) {
+							if (method === "POST") {
+								console.error("REQUEST BODY", postBody);
+							}
+							console.error("RESPONSE HEADERS", res.headers);
+							console.error("RESPONSE BODY", body);
+							var err = new Error(method + " Url '" + url + "' returned with status: " + res.statusCode);
+							err.code = res.statusCode;
+							return callback(err);
+						}
+						data.push(body);
+					} else {
+						console.error(body);
+					}
+					if (links.next) {
+						return fetchPage(links.next, function(err, _data) {
+							if (err) return callback(err);
+							data = data.concat(_data);
+							return callback(null, data);
+						});
+					}
+					return callback(null, data);
+				});
+			}
+			return fetchPage(url, callback);
+		});
 	}
 
 
@@ -123,16 +146,45 @@ exports.authorize = function(context, callback) {
 		});
 	}
 
+	function ensureSshKey(callback) {
+
+		return context.adapterMethods.authorize.isPublicKeyAdded("github", function(err, isAdded, notifyAdded) {
+			if (err) return callback(err);
+			if (isAdded) return callback(null);
+			return context.adapterMethods.authorize.getPublicKey(function(err, publicKey) {
+				if (err) return callback(err);
+				return makeRequest("/user/keys", {}, function(err, data) {
+					if (err) return callback(err);
+					if (
+						data[0].filter(function(key) {
+							return (key.key === publicKey);
+						}).length >= 1
+					) {
+						return notifyAdded(callback);
+					}
+					return makeRequest("POST:/user/keys", {
+						"title": "pinf-epoch:" + context.authUid + ":" + context.getAbsolutePathFromProperty("pinfHome", context.pinfEpoch),
+						"key": publicKey
+					}, function(err, data) {
+						if (err) return callback(err);
+						return notifyAdded(JSON.stringify(data[0], null, 4), callback);
+					});
+				});
+			});
+		});
+	}
+
 	return ensureAuthorized(function(err, credentials) {
 		if (err) return callback(err);
 
 		context.adapterProperties.authorize.github = {
 			getCredentials: function(callback) {
 				return callback(null, credentials);
-			}
+			},
+			makeRequest: makeRequest
 		}
 
-		return callback(null);
+		return ensureSshKey(callback);
 	});
 
 	return callback(null);
