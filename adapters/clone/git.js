@@ -124,9 +124,7 @@ exports.for = function(context) {
 	exports.callGit = function (procArgs, options, callback) {
 		return context.getEnv(function(err, env) {
 			if (err) return callback(err);
-			if (process.env.DEBUG) {
-				console.log("[pinf] Exec:", "git", procArgs);
-			}
+			context.logger.console.debug("Exec:", "git", procArgs);
 		    var proc = SPAWN("git", procArgs, {
 		        cwd: options.cwd || process.cwd(),
 		        env: env
@@ -138,17 +136,13 @@ exports.for = function(context) {
 		    proc.stdout.on("data", function(data) {
 		// TODO: Only log progress if in interactive shell.
 		//process.stdout.write(data.toString());
-                if (process.env.DEBUG) {
-                    process.stdout.write(data);
-                }
+				context.logger.console.debug(data);
 		        buffer += data.toString();
 		    });
 		    proc.stderr.on("data", function(data) {
 		// TODO: Only log progress if in interactive shell.
 		//process.stderr.write(data.toString());
-                if (process.env.DEBUG) {
-                    process.stderr.write(data);
-                }
+				context.logger.console.debug(data);
 		        buffer += data.toString();
 		    });
 		    proc.on("exit", function(code) {
