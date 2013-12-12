@@ -1,6 +1,6 @@
 {
   "name": "pinf",
-  "version": "1.0.0-pre.3",
+  "version": "1.0.0-pre.4",
   "bin": {
     "pinf": "bin/pinf"
   },
