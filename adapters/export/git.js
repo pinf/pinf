@@ -31,7 +31,7 @@ exports.export = function(context, callback) {
 			            "clone",
 		                "--depth", "1",
 		                "--branch", context.selector,
-		                clonePath,
+		                "file://" + clonePath,
 		                tmpPath
 			        ], {}, function(err, result) {
 			            if (err) return callback(err);

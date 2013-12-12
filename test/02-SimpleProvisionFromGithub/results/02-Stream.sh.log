@@ -1,6 +1,6 @@
-[31mSyntaxError: Unexpected end of input
-    at Object.parse (native)
-    at /Volumes/Ginseng-Independence-Desktop/ginseng-source/projects/github.com+pinf+pinf/node_modules/fs-extra/node_modules/jsonfile/lib/jsonfile.js:13:18
-    at fs.js:266:14
-    at /Volumes/Ginseng-Independence-Desktop/ginseng-source/projects/github.com+pinf+pinf/node_modules/fs-extra/node_modules/rimraf/node_modules/graceful-fs/graceful-fs.js:103:5
-    at Object.oncomplete (fs.js:107:15)[39m
+collected: [36mHello
+[0m
+collected: [36mHello
+[0m
+collected: [36mHello
+[0m

@@ -10,7 +10,7 @@ exports.for = function(context) {
 
     exports.distribute = function(callback) {
 
-        return context.resolvePathFromProperty("programsPath", context.duid, function(err, finalPath) {
+        return context.resolvePathFromProperty("programsPath", context.did, function(err, finalPath) {
             if (err) return callback(err);
 
             context.adapterMethods.distribute.getPath = function(callback) {

@@ -28,44 +28,53 @@ exports.clone = function(context, uri, callback) {
         	}
         	function checkIfTag(callback) {
 	    		// Check if *selector* is a tagged version.
-			    return callGit([
-			         "describe",
-			         "--tags"
-			    ], {}, function(err, result) {
-			        if (err) {
-			            if (/fatal: No tags can describe/.test(err.message)) {
-			                return callback(null, false);
-			            }
-			            return callback(err);
-			        }
-			        if (new RegExp("(?:\\n|^)" + ESCAPE_REGEXP(context.selector) + "-[^\\n]+(?:\\n|$)").test(result)) {
+	    		return FS.exists(PATH.join(finalPath, ".git/refs/tags", context.selector), function(exists) {
+	    			if (exists) {
 	            		// Selector is a tagged commit. No need to pull as code at tag will never change.
 		                return callback(null, true);
-			        }
-			        // Pull latest commits and tags.
-	                return callback(null, false);
-			    });
+	    			} else {
+				        // Pull latest commits and tags.
+		                return callback(null, false);
+	    			}
+	    		});
+			}
+        	function checkIfBranch(callback) {
+	    		// Check if *selector* is a branch name.
+	    		return FS.exists(PATH.join(finalPath, ".git/refs/heads", context.selector), function(exists) {
+	    			if (exists) {
+		                return callback(null, true);
+	    			} else {
+		                return callback(null, false);
+	    			}
+	    		});
 			}
 			return checkIfTag(function(err, isTag) {
 				if (err) return callback(err);
 				if (isTag) return callback(null);
-	        	// Check if *selector* is a commit ref or branch name.
-				return callGit([
-	                "rev-parse",
-	                context.selector
-	            ], {}, function(err, result) {
-	            	if (err) {
-			            if (/unknown revision or path not in the working tree/.test(err.message)) {
-			            	return pull(callback);
-						}
-		        		return callback(err);
-	            	}
-	            	if (result.substring(0, context.selector.length) === context.selector) {
-	            		// Selector is a commit ref. No need to pull as code at commit will never change.
-		        		return callback(null);
-	            	}
-	        		// Selector is likely branch name. Pull as there may be new commits or tags.
-	        		return pull(callback);
+
+				return checkIfBranch(function(err, isBranch) {
+					if (err) return callback(err);
+					if (isBranch) return pull(callback);
+
+					// See if we can find commit ref.
+					return callGit([
+		                "rev-parse",
+		                context.selector
+		            ], {}, function(err, result) {
+		            	if (err) {
+				            if (/unknown revision or path not in the working tree/.test(err.message)) {
+				            	return pull(callback);
+							}
+			        		return callback(err);
+		            	}
+		            	if (result.substring(0, context.selector.length) === context.selector) {
+		            		// Selector is a commit ref. No need to pull as code at commit will never change.
+			        		return callback(null);
+		            	}
+		            	console.error("context", context);
+		            	console.error("result", result);
+		            	return callback(new Error("We should never get here!"));
+		            });
 	            });
 			});
         }
@@ -118,11 +127,17 @@ exports.for = function(context) {
 		    proc.stdout.on("data", function(data) {
 		// TODO: Only log progress if in interactive shell.
 		//process.stdout.write(data.toString());
+                if (process.env.DEBUG) {
+                    process.stdout.write(data);
+                }
 		        buffer += data.toString();
 		    });
 		    proc.stderr.on("data", function(data) {
 		// TODO: Only log progress if in interactive shell.
 		//process.stderr.write(data.toString());
+                if (process.env.DEBUG) {
+                    process.stderr.write(data);
+                }
 		        buffer += data.toString();
 		    });
 		    proc.on("exit", function(code) {
