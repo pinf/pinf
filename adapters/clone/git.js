@@ -7,55 +7,24 @@ const ESCAPE_REGEXP = require("escape-regexp");
 
 exports.clone = function(context, uri, callback) {
 
-    function callGit(procArgs, options, callback) {
-    	return context.getEnv(function(err, env) {
-    		if (err) return callback(err);
-    		if (process.env.DEBUG) {
-    			console.log("[pinf] Exec:", "git", procArgs);
-    		}
-	        var proc = SPAWN("git", procArgs, {
-	            cwd: options.cwd || process.cwd(),
-	            env: env
-	        });
-	        var buffer = "";
-	        proc.on("error", function(err) {
-	            return callback(err);
-	        });
-	        proc.stdout.on("data", function(data) {
-// TODO: Only log progress if in interactive shell.
-//process.stdout.write(data.toString());
-	            buffer += data.toString();
-	        });
-	        proc.stderr.on("data", function(data) {
-// TODO: Only log progress if in interactive shell.
-//process.stderr.write(data.toString());
-	            buffer += data.toString();
-	        });
-	        proc.on("exit", function(code) {
-	            // NOTE: Sometimes `git describe --tags <non-existent-rev>` exits with code 128 (git did not exit cleanly)
-	            //       instead of code 1 and buffer `fatal: No names found, cannot describe anything.`.
-	            // @issue https://github.com/sourcemint/sm/issues/3
-	            if (code !== 0) {
-	                if (!buffer) buffer = "(exit code " + code + ")";
-	                return callback(new Error("Git error: " + buffer + " (git " + procArgs.join(" ") + " (cwd: " + (options.cwd || process.cwd()) + ")"));
-	            }
-	            if (/^fatal:/.test(buffer)) {
-	                return callback(new Error("Git error: " + buffer));
-	            }
-	            return callback(null, buffer);
-	        });
-    	});
-    }
+	var callGit = exports.for(context).callGit;
 
 	return context.resolvePathFromProperty("clonesPath", context.duid, function(err, finalPath) {
         if (err) return callback(err);
+
+		context.adapterMethods.clone.getPath = function(callback) {
+			return callback(null, finalPath);
+		}
 
         function pullIfNeeded(callback) {
         	function pull(callback) {
 				return callGit([
 	                "fetch",
 	                "--tags"
-	            ], {}, callback);
+	            ], {}, function(err) {
+	            	if (err) return callback(err);
+	            	return callback(null);
+	            });
         	}
         	function checkIfTag(callback) {
 	    		// Check if *selector* is a tagged version.
@@ -127,3 +96,51 @@ exports.clone = function(context, uri, callback) {
         });
 	});
 }
+
+exports.for = function(context) {
+
+	var exports = {};
+
+	exports.callGit = function (procArgs, options, callback) {
+		return context.getEnv(function(err, env) {
+			if (err) return callback(err);
+			if (process.env.DEBUG) {
+				console.log("[pinf] Exec:", "git", procArgs);
+			}
+		    var proc = SPAWN("git", procArgs, {
+		        cwd: options.cwd || process.cwd(),
+		        env: env
+		    });
+		    var buffer = "";
+		    proc.on("error", function(err) {
+		        return callback(err);
+		    });
+		    proc.stdout.on("data", function(data) {
+		// TODO: Only log progress if in interactive shell.
+		//process.stdout.write(data.toString());
+		        buffer += data.toString();
+		    });
+		    proc.stderr.on("data", function(data) {
+		// TODO: Only log progress if in interactive shell.
+		//process.stderr.write(data.toString());
+		        buffer += data.toString();
+		    });
+		    proc.on("exit", function(code) {
+		        // NOTE: Sometimes `git describe --tags <non-existent-rev>` exits with code 128 (git did not exit cleanly)
+		        //       instead of code 1 and buffer `fatal: No names found, cannot describe anything.`.
+		        // @issue https://github.com/sourcemint/sm/issues/3
+		        if (code !== 0) {
+		            if (!buffer) buffer = "(exit code " + code + ")";
+		            return callback(new Error("Git error: " + buffer + " (git " + procArgs.join(" ") + " (cwd: " + (options.cwd || process.cwd()) + ")"));
+		        }
+		        if (/^fatal:/.test(buffer)) {
+		            return callback(new Error("Git error: " + buffer));
+		        }
+		        return callback(null, buffer);
+		    });
+		});
+	}
+
+	return exports;
+}
+

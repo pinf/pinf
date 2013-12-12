@@ -5,9 +5,9 @@ const VM = require("vm");
 const UTIL = require("util");
 
 
-exports.boot = function(program, done) {
+exports.boot = function(context, done) {
 
-	var scriptPath = program.getAbsolutePathFromProperty("bootScript");
+	var scriptPath = context.getAbsolutePathFromProperty("bootScript");
 
 	function Process(overrides) {
 		var self = this;
@@ -88,8 +88,8 @@ exports.boot = function(program, done) {
         	__dirname: PATH.dirname(uri),
         	__filename: uri,
         	process: new Process({
-        		stdin: program.stdin,
-        		stdout: program.stdout,
+        		stdin: context.stdin,
+        		stdout: context.stdout,
         		argv: process.argv.map(function(item, index) {
         			if (index === 2) return uri;
 					return item;        			
@@ -122,24 +122,24 @@ exports.boot = function(program, done) {
 		return evalBundle(scriptPath, code, {
 			"____PINF_HARNESS____": {
 	    		start: function() {
-	    			program.startTime = Date.now();
+	    			context.startTime = Date.now();
 	    		},
 	    		started: function() {
-    				// See if program is listening for stdin.
+    				// See if context is listening for stdin.
 	    			if (
 	    				(
-	    					Array.isArray(program.stdin._events.readable) &&
-	    					program.stdin._events.readable.length >= 2
+	    					Array.isArray(context.stdin._events.readable) &&
+	    					context.stdin._events.readable.length >= 2
 	    				) ||
-	    				program.stdin._events.data ||
-	    				program.stdin._events.end
+	    				context.stdin._events.data ||
+	    				context.stdin._events.end
 	    			) {    				
-		    			program.stdin.on("ended", function() {
+		    			context.stdin.on("ended", function() {
 		    				return process.nextTick(function() {
 								return callback(null);
 		    				});
 		    			});
-						return program.stdin.ready();
+						return context.stdin.ready();
 	    			} else {
 						return callback(null);
 	    			}

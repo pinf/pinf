@@ -21,9 +21,13 @@ exports.resolve = function(uri, callback) {
 
 		// Add a package context.
 		context = context.copy({
+			id: uri.id,
+			did: uri.did,
 			uid: uri.uid,
 			duid: uri.duid,
-			selector: uri.selector
+			selector: uri.selector,
+			streamid: uri.streamid,
+			dstreamid: uri.dstreamid
 		});
 
 		exports.clone = function(callback) {
@@ -32,7 +36,32 @@ exports.resolve = function(uri, callback) {
 
 				var gitUri = "git@github.com:" + uri.uid.split("/").slice(1).join("/") + ".git";
 
+				// TODO: Put `gitUri` into `context.cloneUri` instead of extra argument.
 				return adapter.clone(context, gitUri, callback);
+			}, callback);
+		}
+
+		exports.export = function(callback) {
+
+			return require.async("../export/git.js", function(adapter) {
+
+				return adapter.export(context, callback);
+			}, callback);
+		}
+
+		exports.install = function(callback) {
+
+			return require.async("../install/npm.js", function(adapter) {
+
+				return adapter.for(context).install(callback);
+			}, callback);
+		}
+
+		exports.distribute = function(callback) {
+
+			return require.async("../distribute/program.js", function(adapter) {
+
+				return adapter.for(context).distribute(callback);
 			}, callback);
 		}
 

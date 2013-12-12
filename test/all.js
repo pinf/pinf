@@ -9,7 +9,8 @@ const UUID = require("node-uuid");
 
 
 const WRITE = true;
-const SKIP_START = true;
+const SKIP_START = false;
+const SKIP_DELETE = false;
 
 
 HELPERS.runMainAndExit(function(callback) {
@@ -34,7 +35,7 @@ HELPERS.runMainAndExit(function(callback) {
 
 	function runMinorTest(majorTest, minorTest, done) {
 
-//if (minorTest!=="04-StreamingPipe.sh") return done(null);		
+//if (!/^02-.*$/.test(majorTest)) return done(null);		
 
 		console.log(("[" + majorTest + "][" + minorTest + "] START").white);
 
@@ -53,6 +54,9 @@ HELPERS.runMainAndExit(function(callback) {
 				return done(err);
 			} else {
 				console.log(("[" + majorTest + "][" + minorTest + "] END").white);				
+				if (SKIP_DELETE) {
+					return done.apply(null, arguments);
+				}
 				return HELPERS.exec('rm -Rf ' + PATH.join(env.PINF_HOME, env.PINF_EPOCH.split(":").pop()), function(err) {
 					if (err) return done(err);
 					return done.apply(null, arguments);
