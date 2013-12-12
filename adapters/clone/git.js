@@ -2,6 +2,7 @@
 const PATH = require("path");
 const FS = require("fs-extra");
 const SPAWN = require("child_process").spawn;
+const ESCAPE_REGEXP = require("escape-regexp");
 
 
 exports.clone = function(context, uri, callback) {
@@ -9,6 +10,9 @@ exports.clone = function(context, uri, callback) {
     function callGit(procArgs, options, callback) {
     	return context.getEnv(function(err, env) {
     		if (err) return callback(err);
+    		if (process.env.DEBUG) {
+    			console.log("[pinf] Exec:", "git", procArgs);
+    		}
 	        var proc = SPAWN("git", procArgs, {
 	            cwd: options.cwd || process.cwd(),
 	            env: env
@@ -43,23 +47,83 @@ exports.clone = function(context, uri, callback) {
     	});
     }
 
-    var finalPath = PATH.join(context.getAbsolutePathFromProperty("clonesPath", context.pinfEpoch), context.did);
-    var tmpPath = finalPath + "~" + Date.now();
-
-    return FS.mkdirs(PATH.dirname(finalPath), function(err) {
+	return context.resolvePathFromProperty("clonesPath", context.duid, function(err, finalPath) {
         if (err) return callback(err);
-        return callGit([
-            "clone",
-            "--progress",
-            uri,
-            tmpPath
-        ], {}, function(err, result) {
-            if (err) return callback(err);
-            // TODO: Verify git repository.
-            return FS.rename(tmpPath, finalPath, function(err) {
-                // NOTE: We ignore `err` on purpose!
-                return callback(null);
-            });
+
+        function pullIfNeeded(callback) {
+        	function pull(callback) {
+				return callGit([
+	                "fetch",
+	                "--tags"
+	            ], {}, callback);
+        	}
+        	function checkIfTag(callback) {
+	    		// Check if *selector* is a tagged version.
+			    return callGit([
+			         "describe",
+			         "--tags"
+			    ], {}, function(err, result) {
+			        if (err) {
+			            if (/fatal: No tags can describe/.test(err.message)) {
+			                return callback(null, false);
+			            }
+			            return callback(err);
+			        }
+			        if (new RegExp("(?:\\n|^)" + ESCAPE_REGEXP(context.selector) + "-[^\\n]+(?:\\n|$)").test(result)) {
+	            		// Selector is a tagged commit. No need to pull as code at tag will never change.
+		                return callback(null, true);
+			        }
+			        // Pull latest commits and tags.
+	                return callback(null, false);
+			    });
+			}
+			return checkIfTag(function(err, isTag) {
+				if (err) return callback(err);
+				if (isTag) return callback(null);
+	        	// Check if *selector* is a commit ref or branch name.
+				return callGit([
+	                "rev-parse",
+	                context.selector
+	            ], {}, function(err, result) {
+	            	if (err) {
+			            if (/unknown revision or path not in the working tree/.test(err.message)) {
+			            	return pull(callback);
+						}
+		        		return callback(err);
+	            	}
+	            	if (result.substring(0, context.selector.length) === context.selector) {
+	            		// Selector is a commit ref. No need to pull as code at commit will never change.
+		        		return callback(null);
+	            	}
+	        		// Selector is likely branch name. Pull as there may be new commits or tags.
+	        		return pull(callback);
+	            });
+			});
+        }
+
+        return FS.exists(finalPath, function(exists) {
+        	if (exists) {
+        		return pullIfNeeded(callback);
+        	}
+
+		    var tmpPath = finalPath + "~" + Date.now();
+
+		    return FS.mkdirs(PATH.dirname(finalPath), function(err) {
+		        if (err) return callback(err);
+		        return callGit([
+		            "clone",
+		            "--progress",
+		            uri,
+		            tmpPath
+		        ], {}, function(err, result) {
+		            if (err) return callback(err);
+		            // TODO: Verify git repository.
+		            return FS.rename(tmpPath, finalPath, function(err) {
+		                // NOTE: We ignore `err` on purpose!
+		                return callback(null);
+		            });
+		        });
+		    });
         });
-    });
+	});
 }

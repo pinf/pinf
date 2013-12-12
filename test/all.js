@@ -45,7 +45,7 @@ HELPERS.runMainAndExit(function(callback) {
 		env.PATH = PATH.join(__dirname, "../bin") + ":" + env.PATH;
 		env.PINF_PROGRAMS = PATH.join(__dirname, majorTest, "programs");
 		env.PINF_HOME = PATH.join(__dirname, ".tmp");
-		env.PINF_EPOCH = "default:tmp-" + UUID.v4();
+		env.PINF_EPOCH = "default:tmp-" + Date.now();
 
 		function callback(err) {
 			if (err) {
@@ -120,6 +120,7 @@ HELPERS.runMainAndExit(function(callback) {
 					if (SKIP_START && exists) {
 						return callback(null);
 					}
+					console.log(("[" + majorTest + "] Run: start.sh").cyan);
 			        var env = {};
 			        for (var name in process.env) {
 			            env[name] = process.env[name];

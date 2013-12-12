@@ -34,6 +34,9 @@ exports.authorize = function(context, callback) {
 			var url = "https://api.github.com" + uri + "per_page=100&access_token=" + credentials.token;
 			function fetchPage(url, callback) {
 				var data = [];
+	    		if (process.env.DEBUG) {
+	    			console.log("[pinf] Request:", url);
+	    		}
 				return REQUEST({
 					method: method,
 					url: url,

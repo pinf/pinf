@@ -22,16 +22,18 @@ exports.resolve = function(uri, callback) {
 		// Add a package context.
 		context = context.copy({
 			uid: uri.uid,
-			did: uri.did
+			duid: uri.duid,
+			selector: uri.selector
 		});
 
 		exports.clone = function(callback) {
+
 			return require.async("../clone/git.js", function(adapter) {
 
-				var gitUri = "git@github.com:" + uri.id.split("/").slice(1).join("/") + ".git";
+				var gitUri = "git@github.com:" + uri.uid.split("/").slice(1).join("/") + ".git";
 
 				return adapter.clone(context, gitUri, callback);
-			});
+			}, callback);
 		}
 
 		return exports;
