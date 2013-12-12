@@ -54,12 +54,20 @@ Calling local PINF *Programs* (see: [01-SimpleCommandLinePiping](https://github.
 Calling cloned PINF *Programs* (see: [02-SimpleProvisionFromGithub](https://github.com/pinf/pinf/tree/master/test/02-SimpleProvisionFromGithub)):
 
     # Clone once and use cached tag on every subsequent run
-    $ pinf github.com/pinf/pinf/v0.6.0-pre.1?test/01-SimpleCommandLinePiping/programs/say Hello
+    $ pinf github.com/pinf/pinf/v1.0.0-pre.3?test/01-SimpleCommandLinePiping/programs/say Hello
     > Hello
 
     # Clone once and fetch from branch on every subsequent run
     $ pinf github.com/pinf/pinf/master?test/01-SimpleCommandLinePiping/programs/say Hello
     > Hello
+
+    # Automatically buffer streams while provisioning programs
+    $ pinf github.com/pinf/pinf/v1.0.0-pre.3?test/01-SimpleCommandLinePiping/programs/send 3 Hello \
+    $ | pinf github.com/pinf/pinf/v1.0.0-pre.4?test/01-SimpleCommandLinePiping/programs/color 36 \
+    $ | pinf github.com/pinf/pinf/v1.0.0-pre.3?test/01-SimpleCommandLinePiping/programs/collect
+    > collected: Hello
+    > collected: Hello
+    > collected: Hello
 
 
 TODO
