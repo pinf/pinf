@@ -27,54 +27,65 @@ exports.clone = function(context, uri, callback) {
 	            });
         	}
         	function checkIfTag(callback) {
-	    		// Check if *selector* is a tagged version.
-	    		return FS.exists(PATH.join(finalPath, ".git/refs/tags", context.selector), function(exists) {
-	    			if (exists) {
-	            		// Selector is a tagged commit. No need to pull as code at tag will never change.
+			    return callGit([
+			         "describe",
+			         "--tags"
+			    ], {}, function(err, result) {
+			        if (err) {
+			            if (/fatal: No tags can describe/.test(err.message)) {
+			                return callback(null, false);
+			            }
+			            return callback(err);
+			        }
+			        if (new RegExp("(?:\\n|^)" + ESCAPE_REGEXP(context.selector) + "-[^\\n]+(?:\\n|$)").test(result)) {
 		                return callback(null, true);
-	    			} else {
-				        // Pull latest commits and tags.
-		                return callback(null, false);
-	    			}
-	    		});
+			        }
+	                return callback(null, false);
+			    });
 			}
         	function checkIfBranch(callback) {
-	    		// Check if *selector* is a branch name.
-	    		return FS.exists(PATH.join(finalPath, ".git/refs/heads", context.selector), function(exists) {
-	    			if (exists) {
+			    return callGit([
+			         "show-ref",
+			         context.selector
+			    ], {}, function(err, result) {
+			        if (err) return callback(err);
+			        if (new RegExp("^\S+\srefs\/tags\/" + ESCAPE_REGEXP(context.selector) + "$").test(result)) {
 		                return callback(null, true);
-	    			} else {
-		                return callback(null, false);
-	    			}
-	    		});
+			        }
+	                return callback(null, false);
+			    });
+			}
+        	function checkIfRef(callback) {
+			    return callGit([
+			         "rev-parse",
+			         context.selector
+			    ], {}, function(err, result) {
+	            	if (err) {
+			            if (/unknown revision or path not in the working tree/.test(err.message)) {
+			            	return callback(null, false);
+						}
+		        		return callback(err);
+	            	}
+	        		return callback(null, true);
+			    });
 			}
 			return checkIfTag(function(err, isTag) {
 				if (err) return callback(err);
-				if (isTag) return callback(null);
-
+				if (isTag) {
+					return callback(null);
+				}
 				return checkIfBranch(function(err, isBranch) {
 					if (err) return callback(err);
-					if (isBranch) return pull(callback);
-
-					// See if we can find commit ref.
-					return callGit([
-		                "rev-parse",
-		                context.selector
-		            ], {}, function(err, result) {
-		            	if (err) {
-				            if (/unknown revision or path not in the working tree/.test(err.message)) {
-				            	return pull(callback);
-							}
-			        		return callback(err);
-		            	}
-		            	if (result.substring(0, context.selector.length) === context.selector) {
-		            		// Selector is a commit ref. No need to pull as code at commit will never change.
-			        		return callback(null);
-		            	}
-		            	console.error("context", context);
-		            	console.error("result", result);
-		            	return callback(new Error("We should never get here!"));
-		            });
+					if (isBranch) {
+						return pull(null);
+					}
+					return checkIfRef(function(err, isRef) {
+						if (err) return callback(err);
+						if (isRef) {
+							return callback(null);
+						}
+						return pull(null);
+					});
 	            });
 			});
         }
