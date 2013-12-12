@@ -12,7 +12,7 @@ The `pinf` command implementation used for hoisting PINF-based programs. [NodeJS
 
 ### What is PINF?
 
-PINF is a set of specific tools and conventions combined to create a platform that allows for the creation of portable programs implemented by orchestrating diverse packages and services contributed and operated by a diverse community. The `pinf` command is an application used to call PINF-based programs.
+PINF is a set of specific tools and conventions combined to create a platform that allows for the creation of portable programs implemented by orchestrating diverse packages and services contributed and operated by a distributed community. The `pinf` command is an application used to call PINF-based programs.
 
 PINF enables collaboratively built systems of arbitrary complexity.
 
