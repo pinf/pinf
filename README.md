@@ -33,6 +33,8 @@ Install:
 Test:
 
     npm install
+    export DEBUG=1  # Optionally enable debug logging
+    export TEST=02  # Run only the matching (prefix) test group
     npm test
 
 

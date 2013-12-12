@@ -6,6 +6,7 @@ const WAITFOR = require("waitfor");
 const HELPERS = require("../lib/helpers").for(module);
 const SPAWN = require("child_process").spawn;
 const UUID = require("node-uuid");
+const ESCAPE_REGEXP = require("escape-regexp");
 
 
 const WRITE = true;
@@ -35,7 +36,11 @@ HELPERS.runMainAndExit(function(callback) {
 
 	function runMinorTest(majorTest, minorTest, done) {
 
-//if (!/^02-.*$/.test(majorTest)) return done(null);		
+		if (process.env.TEST) {
+	        if (!(new RegExp("^" + ESCAPE_REGEXP(process.env.TEST))).test(majorTest)) {
+				return done(null);
+	        }
+		}
 
 		console.log(("[" + majorTest + "][" + minorTest + "] START").white);
 
