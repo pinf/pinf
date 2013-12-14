@@ -6,7 +6,6 @@ pinf
   * Code License: [UNLICENSE](http://unlicense.org/)
   * Docs License: [Creative Commons Attribution-NonCommercial-ShareAlike 3.0](http://creativecommons.org/licenses/by-nc-sa/3.0/)
   * Mailing list: [groups.google.com/group/pinf](http://groups.google.com/group/pinf)
-  * Test Coverage: Striving for 100%
 
 The `pinf` command implementation used for hoisting PINF-based programs. [NodeJS](http://nodejs.org/) is used as the runtime engine for `pinf`.
 
@@ -23,8 +22,8 @@ Setup
 Requirements:
 
   * OSX `>= 10.8`
-  * NodeJS `>= 0.10`
-  * git `>= 1.8`
+  * [NodeJS](http://nodejs.org/) `>= 0.10`
+  * [git](http://git-scm.com/) `>= 1.8`
 
 Install:
 
