@@ -26,6 +26,22 @@ exports.scmstatus = function(context, callback) {
             return callback(null, repositoryPath);
         }
 
+        context.adapterMethods.scmstatus.getRefForTag = function(tag, callback) {
+	        return callGit([
+	            "rev-list",
+	            "-1",
+	            tag
+	        ], {}, function(err, result) {
+	            if (err) {
+	            	if (/unknown revision or path not in the working tree/.test(err.message)) {
+	            		return callback(null, false);
+	            	}
+	            	return callback(err);
+	            }
+				return callback(null, result.replace(/\n$/, ""));
+	        });
+        }
+
         // Info on how git returns status:
         //  * http://stackoverflow.com/questions/6245570/get-current-branch-name
         //  * http://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommited-changes
@@ -55,6 +71,11 @@ exports.scmstatus = function(context, callback) {
 	            if (err) return callback(err);
 
 				context.scm.branch = (result && result.replace(/\n$/, "")) || false;
+
+				if (context.scm.branch === "rc") {
+					context.console.error("The branch name of `rc` is reserved by PINF and may not be used directly in the working tree!");
+					return callback(true);
+				}
 
 				return callback(null);
 			});

@@ -1,0 +1,122 @@
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m
+ [32m'start'[39m
+ [32m'program'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m
+ [32m'program.init'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.init'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'start'[39m [32m'program.authorize'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.authorize'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.clone'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m [32m'end'[39m
+ [32m'program.clone'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'start'[39m [32m'program.export'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.export'[39m
+
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'start'[39m [32m'program.patch'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'end'[39m
+ [32m'program.patch'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m
+ [32m'program.install'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'end'[39m [32m'program.install'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m
+ [32m'start'[39m [32m'program.augment'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m [32m'end'[39m
+ [32m'program.augment'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m [32m'start'[39m
+ [32m'program.build'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m [32m'end'[39m
+ [32m'program.build'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'start'[39m [32m'program.hack'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'end'[39m [32m'program.hack'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.test'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.test'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.distribute'[39m
+
+
+[43m[31msetup |[39m[49m [32m'Set the `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` environment variables to enable sync to AWS S3!'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'end'[39m [32m'program.distribute'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.boot'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.boot'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m
+ [32m'start'[39m
+ [32m'program.run'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m
+ [32m'program.run'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.shutdown'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.shutdown'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m
+ [32m'program.archive'[39m
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m [32m'program.archive'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'start'[39m [32m'program.finalize'[39m
+
+
+[44m[37minfo |[39m[49m 
+[32m'FLOW'[39m [32m'end'[39m
+ [32m'program.finalize'[39m
+
+[44m[37minfo |[39m[49m [32m'FLOW'[39m
+ [32m'end'[39m [32m'program'[39m

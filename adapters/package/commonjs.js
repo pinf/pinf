@@ -11,17 +11,21 @@ exports.for = function(context) {
 
 	exports.package = function (callback) {
 
-		function getPackageIdForRC(rc) {
-			return context.packageId + (rc ? (".rc." + rc) : "");
+		function getArchiveSubPath(path) {
+			return (path || context.packageId).replace("@","/") + ".tar.gz";
 		}
 
-		function getArchiveSubPathForRC(rc) {
-			return getPackageIdForRC(rc).replace("@","/") + ".tar.gz";
+		function getPackageIdForReleaseTag(name, version) {
+			return context.packageId + "." + name + "." + version;
+		}
+
+		function getArchiveSubPathForForReleaseTag(name, version) {
+			return getArchiveSubPath(getPackageIdForReleaseTag(name, version));
 		}
 
 		var archivePath = null;
 
-        return context.resolvePathFromProperty("packagesPath", getArchiveSubPathForRC(), function(err, finalPath) {
+        return context.resolvePathFromProperty("packagesPath", getArchiveSubPath(), function(err, finalPath) {
             if (err) return callback(err);
 
             context.adapterMethods.package.getArchivePath = function(callback) {
@@ -33,88 +37,146 @@ exports.for = function(context) {
                 	// A release exists on the final (non rc) path so we
                 	// cannot create any more release candidates for this version.
                 	archivePath = finalPath;
+        			context.logger.console.notice("Final release already found for package: " + context.packageId);
                     return callback(null);
                 }
 
-                // No final version has yet been released.
+                // No final version has been released yet.
 
-// TODO: Check if version has been tagged. If so Its a final version adnw e check if its created yet or not.
-//       If not tagged we create tags.
 
-                // We can create the next RC release.
+                function createRelease(prereleaseTag, callback) {
+            		if (prereleaseTag === false) {
+            			// Create a release candidate for the final release.
+            			context.logger.console.notice("Creating RC for final release of: " + context.packageId);
+            		} else {
+            			context.logger.console.notice("Creating RC for dev release of: " + context.packageId);
+            		}
 
-                function getNextRC(callback) {
-                    context.logger.console.warn("We assume all release candidate packages for version " + context.version + " are in the cache: " + PATH.dirname(finalPath));
-                	return FS.exists(PATH.dirname(finalPath), function(exists) {
-                		if (!exists) return callback(null, 1);
-	                	return FS.readdir(PATH.dirname(finalPath), function(err, releases) {
-		                    if (err) return callback(err);
-							var found = 0;
-							var re = new RegExp(
-							   "^(?:" +
-								   ESCAPE_REGEXP(getPackageIdForRC().replace("@","-")) + "|" +
-								   ESCAPE_REGEXP(getPackageIdForRC().split("@").pop()) +
-							   ")(?:\\.rc\\.(\\d+))?(?:\\.tar\\.gz)?$"
-							);
-							releases.forEach(function(release) {
-								if ((m = re.exec(release))) {
-									found = Math.max(found, parseInt(m[1]));
-								}
-							});
-							found += 1;							
-							return callback(null, found);
-	                	});
-                	});
-                }
+	                function getNextRC(callback) {
+	                	if (prereleaseTag === "rc") {
+		                    context.logger.console.warn("We assume all release candidate packages for version " + context.version + " are in the cache: " + PATH.dirname(finalPath));
+		                	return FS.exists(PATH.dirname(finalPath), function(exists) {
+		                		if (!exists) return callback(null, 1);
+			                	return FS.readdir(PATH.dirname(finalPath), function(err, releases) {
+				                    if (err) return callback(err);
+									var found = 0;
+									var re = new RegExp(
+									   "^(?:" +
+										   ESCAPE_REGEXP(context.packageId.replace("@","-")) + "|" +
+										   ESCAPE_REGEXP(context.packageId.split("@").pop()) +
+									   ")(?:\\." + prereleaseTag + "\\.(\\d+))?(?:\\.tar\\.gz)?$"
+									);
+									releases.forEach(function(release) {
+										if ((m = re.exec(release))) {
+											found = Math.max(found, parseInt(m[1]));
+										}
+									});
+									found += 1;							
+									return callback(null, found);
+			                	});
+		                	});
+	                	} else {
+	                		// We are creating a release from a dev branch.
+	                		// If all changes have been comitted the release tag is set to the git ref.
+	                		if (context.scm.dirty === false) {
+	                			return callback(null, context.scm.ref.substring(0, 7));
+	                		}
+	                		// Otherwise we set it to the current time.
+	                		else {
+	                			return callback(null, Math.floor(Date.now()/1000));
+	                		}
+	                	}
+	                }
 
-                return getNextRC(function(err, rc) {
-                    if (err) return callback(err);
+	                return getNextRC(function(err, prereleaseTagVersion) {
+	                    if (err) return callback(err);
 
-			        return context.resolvePathFromProperty("packagesPath", getArchiveSubPathForRC(rc), function(err, rcPath) {
-			            if (err) return callback(err);
+				        return context.resolvePathFromProperty("packagesPath", getArchiveSubPathForForReleaseTag(prereleaseTag, prereleaseTagVersion), function(err, releasePath) {
+				            if (err) return callback(err);
 
-	                    var tmpPath = rcPath + "~" + Date.now();
+				            return FS.exists(releasePath, function(exists) {
+				                if (exists) {
+				                	// A tagged release already exists.
+				                	// This happens typically for dev releases and should not happen for
+				                	// final version releases as `getNextRC()` ensures we always get a ner version.
+				                	archivePath = releasePath;
+				        			context.logger.console.notice("Dev release already found for package: " + context.packageId);
+				                    return callback(null);
+				                }
 
-		                return context.adapterMethods.install.getPath(function(err, installPath) {
-		                    if (err) return callback(err);
+			                    var tmpPath = releasePath + "~" + Date.now();
 
-		                    return FS.mkdirs(PATH.dirname(rcPath), function(err) {
-		                        if (err) return callback(err);
+				                return context.adapterMethods.install.getPath(function(err, installPath) {
+				                    if (err) return callback(err);
 
-		                        function copyAllDistributionFiles(callback) {
-		                        	// TODO: Copy all files that should be published. Files in
-		                        	//	     `.distignore` get ignored.
-		                        	// For now we export all files.
-		                        	return callback(null, PATH.join(PATH.dirname(rcPath), getPackageIdForRC(rc).replace("@", "-")));
-		                        }
+				                    return FS.mkdirs(PATH.dirname(releasePath), function(err) {
+				                        if (err) return callback(err);
 
-		                        return copyAllDistributionFiles(function(err, distPath) {
-		                            if (err) return callback(err);
+				                        function copyAllDistributionFiles(callback) {
+				                        	// TODO: Copy all files that should be published. Files in
+				                        	//	     `.distignore` get ignored.
+				                        	// For now we export all files.
+				                        	return callback(null, PATH.join(PATH.dirname(releasePath), getPackageIdForReleaseTag(prereleaseTag, prereleaseTagVersion).replace("@", "-")));
+				                        }
 
-			                        return FS.symlink(installPath, distPath, function(err) {
-			                            if (err) return callback(err);
-
-			                            context.logger.console.warn("All symbolic links in `distPath` (" + distPath + ") get followed when creating package archive!");
-
-				                        return HELPERS.exec('tar --dereference -zcf "' + tmpPath + '" "' + PATH.basename(distPath) + '/"', {
-				                        	cwd: PATH.dirname(distPath)
-				                        }, function(err) {
+				                        return copyAllDistributionFiles(function(err, distPath) {
 				                            if (err) return callback(err);
 
-				                            return FS.rename(tmpPath, rcPath, function(err) {
-				                                // NOTE: We ignore `err` on purpose!
+					                        return FS.symlink(installPath, distPath, function(err) {
+					                            if (err) return callback(err);
 
-				                                // New release candidate as been created.
-							                	archivePath = rcPath;
-				                                return callback(null);
-				                            });
+					                            context.logger.console.warn("All symbolic links in `distPath` (" + distPath + ") get followed when creating package archive!");
+
+						                        return HELPERS.exec('tar --dereference -zcf "' + tmpPath + '" "' + PATH.basename(distPath) + '/"', {
+						                        	cwd: PATH.dirname(distPath)
+						                        }, function(err) {
+						                            if (err) return callback(err);
+
+						                            return FS.rename(tmpPath, releasePath, function(err) {
+						                                // NOTE: We ignore `err` on purpose!
+
+						                                // New release candidate as been created.
+									                	archivePath = releasePath;
+						                                return callback(null);
+						                            });
+						                        });
+					                        });
 				                        });
-			                        });
-		                        });
-		                    });
-		                });
-			        });
+				                    });
+				                });
+			                });
+				        });
+	                });
+                }
+
+            	return context.adapterMethods.scmstatus.getRefForTag("v" + context.version, function(err, tagRef) {
+                	if (err) return callback(err);
+
+                	var prereleaseTag = null;
+
+                	if (tagRef === context.scm.ref) {
+            			// The current working tree commit is the same as the tagged version commit.
+            			if (context.scm.dirty === false) {
+            				// No pending changes to commit.
+            				// We can make the final release.
+            				prereleaseTag = "rc";
+            			} else
+            			if (context.ignoreScmDirty === true) {
+            				// There are pending changes to commit.
+            				// Even though we wish to ignore these pending changes we cannot
+            				// publish the final release with the changes in place.
+            				// So we make a dev release.
+            				prereleaseTag = context.scm.branch;
+            			}
+            		} else {
+            			// The current working tree commit is different to the tagged version commit.
+            			// We need to make a dev release.
+        				prereleaseTag = context.scm.branch;
+            		}
+
+        			return createRelease(prereleaseTag, callback);
                 });
+
             });
         });
 	}
