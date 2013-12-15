@@ -12,15 +12,7 @@ exports.for = function(context) {
 	exports.package = function (callback) {
 
 		function getArchiveSubPath(path) {
-			return (path || context.getPackageId()).replace("@","/") + ".tar.gz";
-		}
-
-		function getPackageIdForReleaseTag(name, version) {
-			return context.getPackageId() + "." + name + "." + version;
-		}
-
-		function getArchiveSubPathForForReleaseTag(name, version) {
-			return getArchiveSubPath(getPackageIdForReleaseTag(name, version));
+			return context.getPackageId().replace("@","/") + ".tar.gz";
 		}
 
 		var archivePath = null;
@@ -91,7 +83,9 @@ exports.for = function(context) {
 	                return getNextRC(function(err, prereleaseTagVersion) {
 	                    if (err) return callback(err);
 
-				        return context.resolvePathFromProperty("packagesPath", getArchiveSubPathForForReleaseTag(prereleaseTag, prereleaseTagVersion), function(err, releasePath) {
+	                    context.version.appendTag(prereleaseTag, prereleaseTagVersion);
+
+				        return context.resolvePathFromProperty("packagesPath", getArchiveSubPath(), function(err, releasePath) {
 				            if (err) return callback(err);
 
 				            return FS.exists(releasePath, function(exists) {
@@ -116,7 +110,7 @@ exports.for = function(context) {
 				                        	// TODO: Copy all files that should be published. Files in
 				                        	//	     `.distignore` get ignored.
 				                        	// For now we export all files.
-				                        	return callback(null, PATH.join(PATH.dirname(releasePath), getPackageIdForReleaseTag(prereleaseTag, prereleaseTagVersion).replace("@", "-")));
+				                        	return callback(null, PATH.join(PATH.dirname(releasePath), context.getPackageId().replace("@", "-")));
 				                        }
 
 				                        return copyAllDistributionFiles(function(err, distPath) {

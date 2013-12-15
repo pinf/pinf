@@ -41,6 +41,20 @@ Version.prototype.setBuild = function(build) {
 	this.build = build;
 }
 
+Version.prototype.appendTag = function(tagName, tagVersion) {
+	if (!this.prereleaseTag) {
+		this.prereleaseTag = [];
+	}
+	var index = this.prereleaseTag.indexOf(tagName);
+	if (index >= 0 && (index.length-1) !== index) {
+		throw new Error("Cannot append tag `" + tagName + "` as it already exists but not as the latest tag!");
+	}
+	if (index === -1) {
+		this.prereleaseTag.push(tagName);
+	}
+	this.prereleaseVersion = tagVersion;
+}
+
 Version.prototype.toString = function() {
 	var parts = [];
 	parts.push(this.major);
@@ -51,13 +65,13 @@ Version.prototype.toString = function() {
 		parts.push(this.patch);
 	}
 	if (this.prereleaseTag !== null) {
-		parts.push(this.prereleaseTag);
+		parts = parts.concat(this.prereleaseTag);
 	}
 	if (this.prereleaseVersion !== null) {
 		parts.push(this.prereleaseVersion);
 	}
 	parts = [ parts.join(".") ];
-	if (this.build !== null) {
+	if (this.build !== null && this.build !== this.prereleaseVersion) {
 		parts.push(this.build);
 	}
 	return parts.join("+");
