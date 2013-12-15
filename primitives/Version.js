@@ -37,6 +37,10 @@ Version.prototype.fromString = function(str) {
 	return this;
 }
 
+Version.prototype.setBuild = function(build) {
+	this.build = build;
+}
+
 Version.prototype.toString = function() {
 	var parts = [];
 	parts.push(this.major);
