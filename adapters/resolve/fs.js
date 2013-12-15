@@ -2,6 +2,7 @@
 ;require("require.async")(require);
 
 const HELPERS = require("../../lib/helpers").for(module);
+const PRIMITIVES = require("../../lib/primitives");
 
 
 exports.canResolve = function(uri) {
@@ -31,11 +32,10 @@ exports.resolve = function(uri, callback) {
 				var info = {
 					id: context.getAbsolutePathFromProperty("programPath").replace(/[:@#\+]/g, "-")
 				};
-				info.uid = descriptor.uid || null;
+				info.uid = descriptor.getPropertyObject("uid");
 				info.selector = null;
 				info.streamid = null;
 				info.did = (info.id && info.id.replace(/\//g, "~")) || null;
-				info.duid = (info.uid && info.uid.replace(/\//g, "~")) || null;
 				info.dstreamid = (info.streamid && info.streamid.replace(/\//g, "~")) || null;
 
 				// Add a package context.
@@ -60,11 +60,6 @@ exports.resolve = function(uri, callback) {
 				if (!ctx.version) {
 					ctx.logger.console.setup("Set `version` in `package.json` to publish the package!");
 					return callback(null);
-				}
-
-				ctx.packageId = ctx.duid + "@" + ctx.version;
-				if (ctx.scm && ctx.scm.ref && ctx.scm.dirty === false) {
-					ctx.packageId += "+" + ctx.scm.ref.substring(0, 7);
 				}
 
 				return require.async("../package/commonjs.js", function(adapter) {

@@ -24,7 +24,6 @@ exports.resolve = function(uri, callback) {
 			id: uri.id,
 			did: uri.did,
 			uid: uri.uid,
-			duid: uri.duid,
 			selector: uri.selector,
 			streamid: uri.streamid,
 			dstreamid: uri.dstreamid

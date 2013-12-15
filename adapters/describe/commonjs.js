@@ -1,6 +1,7 @@
 
 const PATH = require("path");
 const FS = require("fs-extra");
+const PRIMITIVES = require("../../lib/primitives");
 
 
 exports.for = function(context) {
@@ -13,7 +14,9 @@ exports.for = function(context) {
 			// TODO: Automatically call this by getting FS API from context.
 			context.used.fs.describe.push(path);
 
-			return FS.readJson(path, function(err, descriptor) {
+			var descriptor = new PRIMITIVES.PackageDescriptor(context);
+
+			return descriptor.fromPath(path, function(err) {
 				if (err) return callback(err);
 
 				context.adapterMethods.describe.getDescriptor = function(callback) {

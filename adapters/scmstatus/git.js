@@ -45,6 +45,7 @@ exports.scmstatus = function(context, callback) {
         // Info on how git returns status:
         //  * http://stackoverflow.com/questions/6245570/get-current-branch-name
         //  * http://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommited-changes
+        //  * http://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
 
         // TODO: Speed up these calls. e.g. call within one exec (echo delimiters) or use module that does not spawn.
 

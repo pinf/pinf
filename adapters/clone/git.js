@@ -9,7 +9,7 @@ exports.clone = function(context, uri, callback) {
 
 	var callGit = exports.for(context).callGit;
 
-	return context.resolvePathFromProperty("clonesPath", context.duid, function(err, finalPath) {
+	return context.resolvePathFromProperty("clonesPath", context.uid.toString("dirname"), function(err, finalPath) {
         if (err) return callback(err);
 
 		context.adapterMethods.clone.getPath = function(callback) {

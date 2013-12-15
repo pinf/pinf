@@ -12,11 +12,11 @@ exports.for = function(context) {
 	exports.package = function (callback) {
 
 		function getArchiveSubPath(path) {
-			return (path || context.packageId).replace("@","/") + ".tar.gz";
+			return (path || context.getPackageId()).replace("@","/") + ".tar.gz";
 		}
 
 		function getPackageIdForReleaseTag(name, version) {
-			return context.packageId + "." + name + "." + version;
+			return context.getPackageId() + "." + name + "." + version;
 		}
 
 		function getArchiveSubPathForForReleaseTag(name, version) {
@@ -37,7 +37,7 @@ exports.for = function(context) {
                 	// A release exists on the final (non rc) path so we
                 	// cannot create any more release candidates for this version.
                 	archivePath = finalPath;
-        			context.logger.console.notice("Final release already found for package: " + context.packageId);
+        			context.logger.console.notice("Final release already found for package: " + context.getPackageId());
                     return callback(null);
                 }
 
@@ -47,9 +47,9 @@ exports.for = function(context) {
                 function createRelease(prereleaseTag, callback) {
             		if (prereleaseTag === false) {
             			// Create a release candidate for the final release.
-            			context.logger.console.notice("Creating RC for final release of: " + context.packageId);
+            			context.logger.console.notice("Creating RC for final release of: " + context.getPackageId());
             		} else {
-            			context.logger.console.notice("Creating RC for dev release of: " + context.packageId);
+            			context.logger.console.notice("Creating RC for dev release of: " + context.getPackageId());
             		}
 
 	                function getNextRC(callback) {
@@ -62,8 +62,8 @@ exports.for = function(context) {
 									var found = 0;
 									var re = new RegExp(
 									   "^(?:" +
-										   ESCAPE_REGEXP(context.packageId.replace("@","-")) + "|" +
-										   ESCAPE_REGEXP(context.packageId.split("@").pop()) +
+										   ESCAPE_REGEXP(context.getPackageId().replace("@","-")) + "|" +
+										   ESCAPE_REGEXP(context.getPackageId().split("@").pop()) +
 									   ")(?:\\." + prereleaseTag + "\\.(\\d+))?(?:\\.tar\\.gz)?$"
 									);
 									releases.forEach(function(release) {
@@ -100,7 +100,7 @@ exports.for = function(context) {
 				                	// This happens typically for dev releases and should not happen for
 				                	// final version releases as `getNextRC()` ensures we always get a ner version.
 				                	archivePath = releasePath;
-				        			context.logger.console.notice("Dev release already found for package: " + context.packageId);
+				        			context.logger.console.notice("Dev release already found for package: " + context.getPackageId());
 				                    return callback(null);
 				                }
 
