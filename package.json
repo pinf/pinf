@@ -19,6 +19,7 @@
     "node-uuid": "~1.4.1",
     "request": "~2.29.0",
     "deepmerge": "~0.2.7",
-    "semver": "~2.2.1"
+    "semver": "~2.2.1",
+    "aws-sdk": "~2.0.0-rc3"
   }
 }

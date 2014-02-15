@@ -24,6 +24,15 @@ exports.for = function(context) {
                 return callback(null, archivePath);
             }
 
+			context.adapterMethods.package.isArchiveSynced = function(alias, callback) {			
+				var path = archivePath + "+synced-to-" + alias;
+				return FS.exists(path, function(exists) {
+					return callback(null, (exists)? path : false, function(data, callback) {
+						return FS.outputFile(path, data, callback);
+					});
+				});
+			}
+
             return FS.exists(finalPath, function(exists) {
                 if (exists) {
                 	// A release exists on the final (non rc) path so we

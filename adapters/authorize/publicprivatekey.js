@@ -68,7 +68,6 @@ exports.authorize = function(context, callback) {
 		}
 
 		function createPrivateKey(callback) {
-			// @see https://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man1/ssh-add.1.html
 			return call("/usr/bin/ssh-keygen", [
 				"-t", "rsa",
 				'-b','2048',
